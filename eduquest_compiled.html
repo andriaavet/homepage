@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduQuest - Game-Based Learning Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+        }
+        
+        body {
+            background-color: #f0f9ff;
+            overflow: hidden;
+            height: 100vh;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        /* Top Status Bar */
+        
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(to right, #7c4dff, #5e35b1);
+            color: white;
+            padding: 12px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #ffca28;
+            border: 3px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .user-stats {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .level,
+        .points {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .level span,
+        .points span {
+            font-size: 14px;
+        }
+        /* Game World Map */
+        
+        .game-world {
+            position: relative;
+            height: calc(100vh - 140px);
+            /* Accounting for top bar and bottom nav */
+            width: 100%;
+            overflow: auto;
+            background: linear-gradient(to bottom, #ffe6f0, #fff0f5);
+            background-image: url('/api/placeholder/100/100'), radial-gradient(circle at 20% 30%, #ffcce6 0%, transparent 20%), radial-gradient(circle at 80% 40%, #ffd6eb 0%, transparent 15%), radial-gradient(circle at 40% 70%, #ffe0f0 0%, transparent 25%), radial-gradient(circle at 70% 90%, #ffeaf5 0%, transparent 20%);
+            background-repeat: repeat;
+            scroll-behavior: smooth;
+            min-height: 800px;
+            min-width: 1000px;
+        }
+        /* Game Locations */
+        
+        .location {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s, filter 0.3s;
+            z-index: 4;
+        }
+        
+        .location:hover,
+        .location:active {
+            transform: scale(1.1);
+            filter: brightness(1.2);
+            z-index: 10;
+        }
+        
+        .location-icon {
+            width: 100px;
+            height: 100px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            margin-bottom: 10px;
+            animation: glow 2s infinite alternate;
+        }
+        
+        .location-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 4px 12px;
+            border-radius: 15px;
+        }
+        /* Individual Locations - Fixed positions */
+        
+        #join-game {
+            top: 30%;
+            left: 45%;
+            transform: translate(-50%, -50%);
+        }
+        
+        #join-game .location-icon {
+            background: linear-gradient(135deg, #ff4081, #ff9100);
+        }
+        
+        #classroom {
+            top: 20%;
+            left: 35%;
+        }
+        
+        #classroom .location-icon {
+            background: linear-gradient(135deg, #4caf50, #8bc34a);
+        }
+        
+        #leaderboard {
+            top: 20%;
+            right: 35%;
+        }
+        
+        #leaderboard .location-icon {
+            background: linear-gradient(135deg, #ffc107, #ffeb3b);
+        }
+        
+        #marketplace {
+            bottom: 40%;
+            left: 35%;
+        }
+        
+        #marketplace .location-icon {
+            background: linear-gradient(135deg, #03a9f4, #00bcd4);
+        }
+        
+        #completed {
+            bottom: 40%;
+            right: 35%;
+        }
+        
+        #completed .location-icon {
+            background: linear-gradient(135deg, #9c27b0, #673ab7);
+        }
+        /* Navigation Bar */
+        
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(to right, #5e35b1, #7c4dff);
+            padding: 10px 0;
+            display: flex;
+            justify-content: space-around;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-item:hover,
+        .nav-item:active {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 2px;
+        }
+        
+        .nav-label {
+            font-size: 12px;
+        }
+        /* Joystick Control */
+        
+        .joystick-container {
+            position: fixed;
+            bottom: 80px;
+            right: 30px;
+            width: 100px;
+            height: 100px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+            z-index: 20;
+        }
+        
+        .joystick {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            cursor: grab;
+        }
+        /* Game Join Modal */
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #7c4dff, #2196f3);
+            border-radius: 20px;
+            padding: 30px;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.5);
+            transform: scale(0.8);
+            animation: modalOpen 0.3s forwards;
+        }
+        
+        @keyframes modalOpen {
+            to {
+                transform: scale(1);
+            }
+        }
+        
+        .modal-title {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .pin-input {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .pin-digit {
+            width: 50px;
+            height: 60px;
+            background-color: white;
+            border-radius: 10px;
+            border: none;
+            font-size: 24px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .join-button {
+            background: linear-gradient(to right, #ff4081, #ff9100);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        #join-game:hover,
+        #join-game:active {
+            transform: translate(-50%, -50%) !important;
+            filter: brightness(1.2);
+            z-index: 10;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        /* Player Character */
+        
+        .player {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: #ff4081;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+            top: 70%;
+            left: 70%;
+            z-index: 5;
+            transition: top 0.5s, left 0.5s;
+        }
+        /* Animations */
+        
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 15px rgba(125, 125, 255, 0.7);
+            }
+            to {
+                box-shadow: 0 0 25px rgba(125, 125, 255, 0.9), 0 0 35px rgba(80, 180, 255, 0.6);
+            }
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+        
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+        /* Fixed hover state to not interfere with floating animation */
+        
+        .location.floating:hover {
+            animation: none;
+            transform: scale(1.1);
+        }
+        /* Responsive adjustments */
+        
+        @media (max-width: 768px) {
+            .location {
+                width: 140px;
+                height: 140px;
+            }
+            .location-icon {
+                width: 90px;
+                height: 90px;
+                font-size: 42px;
+            }
+            /* Adjust location positioning for smaller screens */
+            #join-game {
+                top: 40%;
+            }
+            #classroom {
+                top: 30%;
+                left: 30%;
+            }
+            #leaderboard {
+                top: 30%;
+                right: 30%;
+            }
+            #marketplace {
+                bottom: 30%;
+                left: 30%;
+            }
+            #completed {
+                bottom: 30%;
+                right: 30%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .joystick-container {
+                bottom: 70px;
+                right: 20px;
+                width: 80px;
+                height: 80px;
+            }
+            .joystick {
+                width: 30px;
+                height: 30px;
+            }
+            .location {
+                width: 120px;
+                height: 120px;
+            }
+            .location-icon {
+                width: 80px;
+                height: 80px;
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Status Bar -->
+    <div class="top-bar">
+        <div class="user-info">
+            <div class="avatar">
+                <img src="/api/placeholder/40/40" alt="Player Avatar">
+            </div>
+            <div class="name">Alex</div>
+        </div>
+        <div class="user-stats">
+            <div class="level">
+                <span>LVL</span>
+                <div>12</div>
+            </div>
+            <div class="points">
+                <span>Cool Points</span>
+                <div>3250</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game World Map -->
+    <div class="game-world">
+        <!-- Player Character -->
+        <div class="player"></div>
+
+        <!-- Game Locations -->
+        <div id="join-game" class="location floating">
+            <div class="location-icon">🎮</div>
+            <div class="location-name">Join Game</div>
+        </div>
+
+        <div id="classroom" class="location floating">
+            <div class="location-icon">🏫</div>
+            <div class="location-name">Class</div>
+        </div>
+
+        <div id="leaderboard" class="location floating">
+            <div class="location-icon">🏆</div>
+            <div class="location-name">Leaderboard</div>
+        </div>
+
+        <div id="marketplace" class="location floating">
+            <div class="location-icon">🛍️</div>
+            <div class="location-name">Marketplace</div>
+        </div>
+
+        <div id="completed" class="location floating">
+            <div class="location-icon">✅</div>
+            <div class="location-name">Completed</div>
+        </div>
+    </div>
+
+    <!-- Joystick Control -->
+    <div class="joystick-container">
+        <div class="joystick" id="joystick"></div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <div class="nav-bar">
+        <div class="nav-item">
+            <div class="nav-icon">🎮</div>
+            <div class="nav-label">Join</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon">🏫</div>
+            <div class="nav-label">Class</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon">🏆</div>
+            <div class="nav-label">Top</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon">🛍️</div>
+            <div class="nav-label">Shop</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon">✅</div>
+            <div class="nav-label">Done</div>
+        </div>
+    </div>
+
+    <!-- Game Join Modal -->
+    <div class="modal" id="joinModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h2 class="modal-title">Enter Game PIN</h2>
+            <div class="pin-input">
+                <input type="text" class="pin-digit" maxlength="1" onkeyup="moveToNext(this, 1)">
+                <input type="text" class="pin-digit" maxlength="1" onkeyup="moveToNext(this, 2)">
+                <input type="text" class="pin-digit" maxlength="1" onkeyup="moveToNext(this, 3)">
+                <input type="text" class="pin-digit" maxlength="1" onkeyup="moveToNext(this, 4)">
+            </div>
+            <button class="join-button" onclick="joinGame()">JOIN GAME</button>
+        </div>
+    </div>
+
+    <script>
+        // Modal functionality
+        function openModal() {
+            document.getElementById("joinModal").style.display = "flex";
+            document.querySelector(".pin-digit").focus();
+        }
+
+        function closeModal() {
+            document.getElementById("joinModal").style.display = "none";
+        }
+
+        // Join game functionality
+        function joinGame() {
+            // Get all pin digit inputs
+            const pinDigits = document.querySelectorAll(".pin-digit");
+            let pin = "";
+
+            // Collect all entered digits to form the complete PIN
+            pinDigits.forEach(input => {
+                pin += input.value;
+            });
+
+            // Check if a complete 4-digit PIN was entered
+            if (pin.length === 4) {
+                try {
+                    // Redirect to the GAMELAB URL
+                    window.location.href = "https://andriaavet.github.io/GAMELAB/";
+
+                    // Fallback approaches if the first method doesn't work
+                    setTimeout(function() {
+                        window.location.assign("https://andriaavet.github.io/GAMELAB/");
+                    }, 100);
+
+                    // Another fallback using window.open
+                    setTimeout(function() {
+                        window.open("https://andriaavet.github.io/GAMELAB/", "_self");
+                    }, 200);
+
+                } catch (e) {
+                    console.error("Redirect error:", e);
+                    alert("Redirection failed. Please go to: https://andriaavet.github.io/GAMELAB/");
+                }
+            } else {
+                // Optional: Show an error or alert if PIN is incomplete
+                alert("Please enter a complete 4-digit PIN");
+            }
+        }
+
+        // PIN input functionality
+        function moveToNext(current, position) {
+            if (current.value.length === 1) {
+                if (position < 4) {
+                    document.querySelectorAll(".pin-digit")[position].focus();
+                } else {
+                    document.querySelector(".join-button").focus();
+                }
+            }
+        }
+
+        // Joystick functionality
+        const joystick = document.getElementById("joystick");
+        const joystickContainer = document.querySelector(".joystick-container");
+        const player = document.querySelector(".player");
+        let isDragging = false;
+        let centerX, centerY;
+
+        function initJoystick() {
+            centerX = joystickContainer.offsetWidth / 2;
+            centerY = joystickContainer.offsetHeight / 2;
+
+            // Reset joystick position
+            joystick.style.transform = "translate(0px, 0px)";
+
+            // Touch events for mobile
+            joystick.addEventListener("touchstart", startDrag);
+            document.addEventListener("touchmove", drag);
+            document.addEventListener("touchend", endDrag);
+
+            // Mouse events for desktop
+            joystick.addEventListener("mousedown", startDrag);
+            document.addEventListener("mousemove", drag);
+            document.addEventListener("mouseup", endDrag);
+        }
+
+        function startDrag(e) {
+            isDragging = true;
+            e.preventDefault();
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+
+            let clientX, clientY;
+
+            if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+
+            const rect = joystickContainer.getBoundingClientRect();
+            const offsetX = clientX - rect.left;
+            const offsetY = clientY - rect.top;
+
+            // Calculate distance from center
+            const deltaX = offsetX - centerX;
+            const deltaY = offsetY - centerY;
+            const distance = Math.min(Math.sqrt(deltaX * deltaX + deltaY * deltaY), centerX);
+
+            // Calculate angle
+            const angle = Math.atan2(deltaY, deltaX);
+
+            // Calculate joystick position
+            const joystickX = Math.cos(angle) * distance;
+            const joystickY = Math.sin(angle) * distance;
+
+            // Update joystick position
+            joystick.style.transform = `translate(${joystickX}px, ${joystickY}px)`;
+
+            // Move player (scaled by factor for game world)
+            const currentLeft = parseFloat(getComputedStyle(player).left) / 100;
+            const currentTop = parseFloat(getComputedStyle(player).top) / 100;
+
+            player.style.left = `${Math.max(0, Math.min(100, currentLeft + joystickX / 50))}%`;
+            player.style.top = `${Math.max(0, Math.min(100, currentTop + joystickY / 50))}%`;
+        }
+
+        function endDrag() {
+            if (!isDragging) return;
+            isDragging = false;
+
+            // Reset joystick position with animation
+            joystick.style.transition = "transform 0.2s ease-out";
+            joystick.style.transform = "translate(0px, 0px)";
+
+            // Remove transition after animation completes
+            setTimeout(() => {
+                joystick.style.transition = "";
+            }, 200);
+        }
+
+        // Add tactile feedback for buttons
+        document.querySelectorAll(".location, .nav-item, .join-button").forEach(element => {
+            element.addEventListener("click", function() {
+                // Store original transform for locations with floating animation
+                const originalTransform = this.style.transform;
+
+                this.style.transform = this.classList.contains("floating") ?
+                    "scale(0.95) translateY(0)" : "scale(0.95)";
+
+                setTimeout(() => {
+                    this.style.transform = originalTransform;
+
+                    // Re-enable floating animation if needed
+                    if (this.classList.contains("floating") && !this.classList.contains("clicked")) {
+                        this.style.animation = "float 3s ease-in-out infinite";
+                    }
+                }, 100);
+
+                // Simulate haptic feedback if supported
+                if (navigator.vibrate) {
+                    navigator.vibrate(20);
+                }
+
+                // Open modal for join game
+                if (this.id === "join-game" || (this.classList.contains("nav-item") && this.querySelector(".nav-icon").textContent === "🎮")) {
+                    openModal();
+                }
+            });
+        });
+
+        // Initialize joystick on load
+        window.addEventListener("load", initJoystick);
+
+        // Close modal if clicked outside
+        window.addEventListener("click", function(event) {
+            const modal = document.getElementById("joinModal");
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Fix location positioning for different screen sizes
+        function adjustPositions() {
+            const gameWorld = document.querySelector(".game-world");
+            const worldWidth = gameWorld.offsetWidth;
+            const worldHeight = gameWorld.offsetHeight;
+
+            // Only make additional adjustments if needed based on screen size
+            if (window.innerWidth < 600) {
+                // Further optimize for smaller screens
+                document.getElementById("classroom").style.left = "25%";
+                document.getElementById("leaderboard").style.right = "25%";
+                document.getElementById("marketplace").style.left = "25%";
+                document.getElementById("completed").style.right = "25%";
+            }
+        }
+
+        // Call position adjustment on load and resize
+        window.addEventListener("load", adjustPositions);
+        window.addEventListener("resize", adjustPositions);
+    </script>
+</body>
+
+</html>
